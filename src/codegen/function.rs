@@ -3,10 +3,10 @@ use std::ffi::CString;
 use std::mem;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use llvm::{BasicBlock, Sub};
 use llvm::Builder;
 use llvm::Function;
 use llvm::Value;
+use llvm::{BasicBlock, Sub};
 
 use wasmparser::TypeOrFuncType;
 
@@ -48,12 +48,7 @@ unsafe fn add_string_attr(k: &str, v: &str, v_ref: *mut llvm::ffi::LLVMValue, ct
         target_features_value.as_bytes().len() as u32,
     );
 
-    crate::llvm_externs::LLVMAddAttributeAtIndex(
-        v_ref,
-        idx,
-        attr_ref
-    );
-
+    crate::llvm_externs::LLVMAddAttributeAtIndex(v_ref, idx, attr_ref);
 }
 
 // HACK: We only want to emit a note about the cortex-m override once
@@ -96,13 +91,16 @@ pub fn compile_function(ctx: &ModuleCtx, f: &ImplementedFunction) {
         let llvm_ctx: *mut llvm::ffi::LLVMContext = mem::transmute(ctx.llvm_ctx as &llvm::Context);
 
         let nounwind = CString::new("nounwind").unwrap();
-        let kind = crate::llvm_externs::LLVMGetEnumAttributeKindForName(nounwind.as_ptr(), nounwind.as_bytes().len());
+        let kind = crate::llvm_externs::LLVMGetEnumAttributeKindForName(
+            nounwind.as_ptr(),
+            nounwind.as_bytes().len(),
+        );
         let attr_ref = crate::llvm_externs::LLVMCreateEnumAttribute(llvm_ctx, kind, 0);
 
         crate::llvm_externs::LLVMAddAttributeAtIndex(
             v_ref,
             crate::llvm_externs::LLVMAttributeFunctionIndex,
-            attr_ref
+            attr_ref,
         );
         if cm_override {
             if !CORTEX_OVERRIDE_MESSAGE_SENT.load(Ordering::Relaxed) {
@@ -112,75 +110,25 @@ pub fn compile_function(ctx: &ModuleCtx, f: &ImplementedFunction) {
                 CORTEX_OVERRIDE_MESSAGE_SENT.store(true, Ordering::Relaxed);
             }
 
-            add_string_attr(
-                "correctly-rounded-divide-sqrt-fp-math",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("correctly-rounded-divide-sqrt-fp-math", "false", v_ref, ctx);
 
-            add_string_attr(
-                "disable-tail-calls",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("disable-tail-calls", "false", v_ref, ctx);
 
-            add_string_attr(
-                "less-precise-fpmad",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("less-precise-fpmad", "false", v_ref, ctx);
 
-            add_string_attr(
-                "min-legal-vector-width",
-                "0",
-                v_ref,
-                ctx
-            );
+            add_string_attr("min-legal-vector-width", "0", v_ref, ctx);
 
-            add_string_attr(
-                "no-frame-pointer-elim",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("no-frame-pointer-elim", "false", v_ref, ctx);
 
-            add_string_attr(
-                "no-infs-fp-math",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("no-infs-fp-math", "false", v_ref, ctx);
 
-            add_string_attr(
-                "no-jump-tables",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("no-jump-tables", "false", v_ref, ctx);
 
-            add_string_attr(
-                "no-nans-fp-math",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("no-nans-fp-math", "false", v_ref, ctx);
 
-            add_string_attr(
-                "no-signed-zeros-fp-math",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("no-signed-zeros-fp-math", "false", v_ref, ctx);
 
-            add_string_attr(
-                "no-trapping-math",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("no-trapping-math", "false", v_ref, ctx);
 
             // add_string_attr(
             //     "stack-protector-buffer-size",
@@ -189,27 +137,11 @@ pub fn compile_function(ctx: &ModuleCtx, f: &ImplementedFunction) {
             //     ctx
             // );
 
-            add_string_attr(
-                "target-cpu",
-                "cortex-m7",
-                v_ref,
-                ctx
-            );
+            add_string_attr("target-cpu", "cortex-m7", v_ref, ctx);
 
-            add_string_attr(
-                "unsafe-fp-math",
-                "false",
-                v_ref,
-                ctx
-            );
+            add_string_attr("unsafe-fp-math", "false", v_ref, ctx);
 
-            add_string_attr(
-                "use-soft-float",
-                "false",
-                v_ref,
-                ctx
-            );
-
+            add_string_attr("use-soft-float", "false", v_ref, ctx);
 
             add_string_attr(
                 "target-features",
@@ -242,7 +174,10 @@ pub fn compile_function(ctx: &ModuleCtx, f: &ImplementedFunction) {
     };
 
     let termination_block = llvm_f.append("exit");
-    let root_breakout_target = BreakoutTarget::new_wrapped(termination_block, f.get_return_type().map(TypeOrFuncType::Type));
+    let root_breakout_target = BreakoutTarget::new_wrapped(
+        termination_block,
+        f.get_return_type().map(TypeOrFuncType::Type),
+    );
 
     // In WASM, a break out of the root block is the same as returning from the function
     // Thus the termination block needs to do that

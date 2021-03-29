@@ -12,10 +12,10 @@ use crate::wasm::Global;
 use crate::wasm::Instruction;
 use crate::Opt;
 
-use crate::codegen::ModuleCtx;
 use crate::codegen::runtime_stubs::*;
 use crate::codegen::type_conversions::llvm_type_to_wasm_type;
 use crate::codegen::type_conversions::wasm_type_to_llvm_type;
+use crate::codegen::ModuleCtx;
 
 pub enum GlobalValue<'a> {
     InlinedConstant(&'a Value),

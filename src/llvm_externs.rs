@@ -31,8 +31,5 @@ extern "C" {
         VLength: c_uint,
     ) -> LLVMAttributeRef;
 
-    pub fn LLVMGetEnumAttributeKindForName(
-        Name: *const c_char,
-        SLen: usize,
-    ) -> c_uint;
+    pub fn LLVMGetEnumAttributeKindForName(Name: *const c_char, SLen: usize) -> c_uint;
 }
