@@ -1,0 +1,70 @@
+---
+BasedOnStyle: Mozilla
+IndentWidth: 8
+Language: Cpp
+
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+AlignTrailingComments: true
+
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true 
+
+AlwaysBreakAfterReturnType: AllDefinitions
+
+BinPackArguments: true
+BinPackParameters: true
+
+BraceWrapping: {
+  AfterClass: false,
+  AfterControlStatement: false,
+  AfterEnum: true,
+  AfterFunction: true,
+  AfterNamespace: false,
+  AfterStruct: false,
+  AfterUnion: false,
+  BeforeElse: false,
+  IndentBraces: false,
+}
+
+BreakBeforeBraces: Custom
+BreakBeforeBinaryOperators: NonAssignment
+
+ColumnLimit: 120
+
+Cpp11BracedListStyle: false
+
+IndentCaseLabels: false
+IndentWrappedFunctionNames: false
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+MaxEmptyLinesToKeep: 2
+
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+SortIncludes: false
+
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+TabWidth: 8
+UseTab: ForIndentation
+
+
+PenaltyBreakAssignment: 100
+PenaltyBreakBeforeFirstCallParameter: 1000
+PenaltyReturnTypeOnItsOwnLine: 0
