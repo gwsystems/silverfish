@@ -14,11 +14,11 @@ env:
 # job control
 
 jobs:
-  cargo-format:
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run Cargo Format
+      - name: Cargo Format
         run: cargo fmt -- --check
 
   test:
