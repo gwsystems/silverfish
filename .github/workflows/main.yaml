@@ -23,7 +23,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: checkout
     strategy:
       matrix:
         libc: [wasmception, wasi-sdk]
