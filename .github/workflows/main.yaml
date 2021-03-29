@@ -23,6 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Run Rustfmt
+        run: cargo fmt -- --check
+
       - name: Install
         run: |
           sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" bash $LLVM_VERSION
