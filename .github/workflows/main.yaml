@@ -12,20 +12,27 @@ env:
   WASI_SDK_URL: https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-8/wasi-sdk-8.0-linux.tar.gz
 
 # job control
+
 jobs:
-  test:
+  checkout:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        libc: [wasmception, wasi-sdk]
-
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run Rustfmt
+  cargo-format:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - name: Run Cargo Format
         run: cargo fmt -- --check
 
+  test:
+    runs-on: ubuntu-latest
+    needs: checkout
+    strategy:
+      matrix:
+        libc: [wasmception, wasi-sdk]
+    steps:
       - name: Install
         run: |
           sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" bash $LLVM_VERSION
