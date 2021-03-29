@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define EXPORT __attribute__ ((visibility ("default")))
-#define IMPORT __attribute__ ((visibility ("default")))
+#define EXPORT __attribute__((visibility("default")))
+#define IMPORT __attribute__((visibility("default")))
 
 IMPORT int imported_function(int arg);
 

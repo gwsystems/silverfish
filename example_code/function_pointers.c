@@ -1,5 +1,5 @@
-#define EXPORT __attribute__ ((visibility ("default")))
-#define IMPORT __attribute__ ((visibility ("default")))
+#define EXPORT __attribute__((visibility("default")))
+#define IMPORT __attribute__((visibility("default")))
 
 typedef int (*fun_ptr)(int);
 

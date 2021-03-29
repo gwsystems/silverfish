@@ -1,20 +1,20 @@
 #include "../runtime.h"
 
 void* memory;
-u32 memory_size;
+u32   memory_size;
 
 int printf_(const char* format, ...);
 
 // Each page is
 #define SPT_PAGE_COUNT_ORDER 8
-#define SPT_PAGE_COUNT (1 << SPT_PAGE_COUNT_ORDER)
+#define SPT_PAGE_COUNT       (1 << SPT_PAGE_COUNT_ORDER)
 
 #define SPT_PAGE_SIZE_ORDER 10
-#define SPT_PAGE_SIZE (1 << SPT_PAGE_SIZE_ORDER)
+#define SPT_PAGE_SIZE       (1 << SPT_PAGE_SIZE_ORDER)
 
 static void* PAGE_TABLE[SPT_PAGE_COUNT] = { 0 };
 
-#define MEM_SIZE ((SPT_PAGE_COUNT + 1) * SPT_PAGE_SIZE)
+#define MEM_SIZE    ((SPT_PAGE_COUNT + 1) * SPT_PAGE_SIZE)
 #define TOTAL_PAGES (MEM_SIZE / WASM_PAGE_SIZE)
 
 char CORTEX_M_MEM[MEM_SIZE] = { 0 };
@@ -22,10 +22,11 @@ char CORTEX_M_MEM[MEM_SIZE] = { 0 };
 u32 cortex_mem_size = MEM_SIZE;
 
 void alloc_linear_memory() {
-//    printf_("8 = (%d %d) 16 = (%d %d) 32 = (%d %d) 64 = (%d %d)\n", sizeof(u8), sizeof(i8), sizeof(u16), sizeof(i16), sizeof(u32), sizeof(i32), sizeof(u64), sizeof(i64));
+    //    printf_("8 = (%d %d) 16 = (%d %d) 32 = (%d %d) 64 = (%d %d)\n", sizeof(u8), sizeof(i8), sizeof(u16),
+    //    sizeof(i16), sizeof(u32), sizeof(i32), sizeof(u64), sizeof(i64));
     awsm_assert(TOTAL_PAGES >= starting_pages);
 
-    memory = &CORTEX_M_MEM[0];
+    memory      = &CORTEX_M_MEM[0];
     memory_size = starting_pages * WASM_PAGE_SIZE;
 
     for (int i = 0; i < SPT_PAGE_COUNT; i++) {
@@ -57,8 +58,8 @@ i32 instruction_memory_grow(i32 count) {
 }
 
 INLINE char* get_memory_ptr_for_runtime(u32 offset, u32 bounds_check) {
-    char* mem_as_chars = (char *) memory;
-    char* address = &mem_as_chars[offset];
+    char* mem_as_chars = (char*)memory;
+    char* address      = &mem_as_chars[offset];
 
     return address;
 }
@@ -76,7 +77,7 @@ INLINE u32 get_page_offset(u32 offset) {
 }
 
 INLINE i8 get_i8(u32 offset) {
-    i8* page = get_page(offset);
+    i8* page        = get_page(offset);
     u32 page_offset = get_page_offset(offset);
     return page[page_offset];
 }
@@ -84,58 +85,58 @@ INLINE i8 get_i8(u32 offset) {
 INLINE i16 get_i16(u32 offset) {
     u32 page_offset = get_page_offset(offset);
     if (page_offset < SPT_PAGE_SIZE - sizeof(i16)) {
-        i8* page = get_page(offset);
-        i16* page_adj = (void*) &page[page_offset];
+        i8*  page     = get_page(offset);
+        i16* page_adj = (void*)&page[page_offset];
         return *page_adj;
     } else {
-        u8 a = (u8) get_i8(offset);
-        u8 b = (u8) get_i8(offset + 1);
-        return (i16) (((u16) b) << 8) | ((u16) a);
+        u8 a = (u8)get_i8(offset);
+        u8 b = (u8)get_i8(offset + 1);
+        return (i16)(((u16)b) << 8) | ((u16)a);
     }
-//    u32 page_offset = get_page_offset(offset);
-//    i8* page = get_page(offset);
-//    i16* page_adj = (void*) &page[page_offset];
-//    printf("Regularly loaded: %p\n", (void*) (u64) *page_adj);
-//
-//    u8 a = (u8) get_i8(offset);
-//    u8 b = (u8) get_i8(offset + 1);
-//    i16 split = (i16) (((u16) b) << 8) | ((u16) a);
-//    printf("Split from (%p, %p)\n", (void*) (u64) a, (void*) (u64) b);
-//    printf("Split loaded: %p\n", (void*) (u64) split);
-//
-//    awsm_assert(*page_adj == split);
-//    return *page_adj;
+    //    u32 page_offset = get_page_offset(offset);
+    //    i8* page = get_page(offset);
+    //    i16* page_adj = (void*) &page[page_offset];
+    //    printf("Regularly loaded: %p\n", (void*) (u64) *page_adj);
+    //
+    //    u8 a = (u8) get_i8(offset);
+    //    u8 b = (u8) get_i8(offset + 1);
+    //    i16 split = (i16) (((u16) b) << 8) | ((u16) a);
+    //    printf("Split from (%p, %p)\n", (void*) (u64) a, (void*) (u64) b);
+    //    printf("Split loaded: %p\n", (void*) (u64) split);
+    //
+    //    awsm_assert(*page_adj == split);
+    //    return *page_adj;
 }
 
 INLINE i32 get_i32(u32 offset) {
     u32 page_offset = get_page_offset(offset);
     if (page_offset < SPT_PAGE_SIZE - sizeof(i32)) {
-        i8* page = get_page(offset);
-        i32* page_adj = (void*) &page[page_offset];
+        i8*  page     = get_page(offset);
+        i32* page_adj = (void*)&page[page_offset];
         return *page_adj;
     } else {
-        u16 a = (u16) get_i16(offset);
-        u16 b = (u16) get_i16(offset + 2);
-        return (i32) (((u32) b) << 16) | ((u32) a);
+        u16 a = (u16)get_i16(offset);
+        u16 b = (u16)get_i16(offset + 2);
+        return (i32)(((u32)b) << 16) | ((u32)a);
     }
 }
 
 INLINE i64 get_i64(u32 offset) {
     u32 page_offset = get_page_offset(offset);
     if (page_offset < SPT_PAGE_SIZE - sizeof(i64)) {
-        i8* page = get_page(offset);
-        i64* page_adj = (void*) &page[page_offset];
+        i8*  page     = get_page(offset);
+        i64* page_adj = (void*)&page[page_offset];
         return *page_adj;
     } else {
-        u32 a = (u32) get_i32(offset);
-        u32 b = (u32) get_i32(offset + 4);
-        return (i64) (((u64) b) << 32) | ((u64) a);
+        u32 a = (u32)get_i32(offset);
+        u32 b = (u32)get_i32(offset + 4);
+        return (i64)(((u64)b) << 32) | ((u64)a);
     }
 }
 
 INLINE float get_f32(u32 offset) {
     union {
-        i32 i;
+        i32   i;
         float f;
     } a;
 
@@ -145,7 +146,7 @@ INLINE float get_f32(u32 offset) {
 
 INLINE double get_f64(u32 offset) {
     union {
-        i64 i;
+        i64    i;
         double f;
     } a;
 
@@ -155,56 +156,56 @@ INLINE double get_f64(u32 offset) {
 
 // Setting routines
 INLINE void set_i8(u32 offset, i8 v) {
-    i8* page = get_page(offset);
-    u32 page_offset = get_page_offset(offset);
+    i8* page          = get_page(offset);
+    u32 page_offset   = get_page_offset(offset);
     page[page_offset] = v;
 }
 
 INLINE void set_i16(u32 offset, i16 v) {
     u32 page_offset = get_page_offset(offset);
     if (page_offset < SPT_PAGE_SIZE - sizeof(i16)) {
-        i8* page = get_page(offset);
-        i16* page_adj = (void*) &page[page_offset];
-        *page_adj = v;
+        i8*  page     = get_page(offset);
+        i16* page_adj = (void*)&page[page_offset];
+        *page_adj     = v;
     } else {
-        u16 v2 = (u16) v;
+        u16 v2 = (u16)v;
 
-        set_i8(offset, (i8) v2);
-        set_i8(offset + 1, (i8) (v2 >> 8));
+        set_i8(offset, (i8)v2);
+        set_i8(offset + 1, (i8)(v2 >> 8));
     }
 }
 
 INLINE void set_i32(u32 offset, i32 v) {
     u32 page_offset = get_page_offset(offset);
     if (page_offset < SPT_PAGE_SIZE - sizeof(i32)) {
-        i8* page = get_page(offset);
-        i32* page_adj = (void*) &page[page_offset];
-        *page_adj = v;
+        i8*  page     = get_page(offset);
+        i32* page_adj = (void*)&page[page_offset];
+        *page_adj     = v;
     } else {
-        u32 v2 = (u32) v;
+        u32 v2 = (u32)v;
 
-        set_i16(offset, (i16) v2);
-        set_i16(offset + 2, (i16) (v2 >> 16));
+        set_i16(offset, (i16)v2);
+        set_i16(offset + 2, (i16)(v2 >> 16));
     }
 }
 
 INLINE void set_i64(u32 offset, i64 v) {
     u32 page_offset = get_page_offset(offset);
     if (page_offset < SPT_PAGE_SIZE - sizeof(i64)) {
-        i8* page = get_page(offset);
-        i64* page_adj = (void*) &page[page_offset];
-        *page_adj = v;
+        i8*  page     = get_page(offset);
+        i64* page_adj = (void*)&page[page_offset];
+        *page_adj     = v;
     } else {
-        u64 v2 = (u64) v;
+        u64 v2 = (u64)v;
 
-        set_i32(offset, (i32) v2);
-        set_i32(offset + 4, (i32) (v2 >> 32));
+        set_i32(offset, (i32)v2);
+        set_i32(offset + 4, (i32)(v2 >> 32));
     }
 }
 
 INLINE void set_f32(u32 offset, float v) {
     union {
-        i32 i;
+        i32   i;
         float f;
     } a;
 
@@ -214,7 +215,7 @@ INLINE void set_f32(u32 offset, float v) {
 
 INLINE void set_f64(u32 offset, double v) {
     union {
-        i64 i;
+        i64    i;
         double f;
     } a;
 
@@ -234,5 +235,9 @@ INLINE char* get_function_from_table(u32 idx, u32 type_id) {
 }
 
 // Functions that aren't useful for this runtime
-INLINE void switch_into_runtime() { return; }
-INLINE void switch_out_of_runtime() { return; }
+INLINE void switch_into_runtime() {
+    return;
+}
+INLINE void switch_out_of_runtime() {
+    return;
+}

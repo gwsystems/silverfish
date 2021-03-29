@@ -2,8 +2,8 @@
 
 #define COUNT 10
 
-int v_index = 0;
-int vals[COUNT] = {1, 7, 400, 5, 63, 6, 900, 47, 0, 4};
+int v_index     = 0;
+int vals[COUNT] = { 1, 7, 400, 5, 63, 6, 900, 47, 0, 4 };
 
 void put_int(char* str, int v);
 

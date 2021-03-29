@@ -1,6 +1,6 @@
 ---
 BasedOnStyle: Mozilla
-IndentWidth: 8
+IndentWidth: 4
 Language: Cpp
 
 AlignAfterOpenBracket: Align
@@ -10,37 +10,40 @@ AlignConsecutiveMacros: true
 AlignEscapedNewlines: Left
 AlignTrailingComments: true
 
-AllowShortBlocksOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: All
+AllowShortFunctionsOnASingleLine: Inline 
 AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: true 
+AllowShortLoopsOnASingleLine: false 
+AllowShortCaseLabelsOnASingleLine: true
 
-AlwaysBreakAfterReturnType: AllDefinitions
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
 
 BinPackArguments: true
 BinPackParameters: true
 
+BreakBeforeBraces: Custom
 BraceWrapping: {
   AfterClass: false,
   AfterControlStatement: false,
-  AfterEnum: true,
-  AfterFunction: true,
+  AfterEnum: false,
+  AfterFunction: false,
   AfterNamespace: false,
   AfterStruct: false,
   AfterUnion: false,
   BeforeElse: false,
   IndentBraces: false,
+  SplitEmptyFunction: false,
 }
 
-BreakBeforeBraces: Custom
 BreakBeforeBinaryOperators: NonAssignment
 
 ColumnLimit: 120
 
 Cpp11BracedListStyle: false
 
-IndentCaseLabels: false
+IndentCaseLabels: true
 IndentWrappedFunctionNames: false
 
 KeepEmptyLinesAtTheStartOfBlocks: false
@@ -48,7 +51,7 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 2
 
 DerivePointerAlignment: false
-PointerAlignment: Right
+PointerAlignment: Left
 
 SortIncludes: false
 
@@ -60,10 +63,6 @@ SpacesBeforeTrailingComments: 1
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-
-TabWidth: 8
-UseTab: ForIndentation
-
 
 PenaltyBreakAssignment: 100
 PenaltyBreakBeforeFirstCallParameter: 1000

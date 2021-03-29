@@ -9,8 +9,6 @@ int f(int i) {
 }
 
 int g(int i) {
-    if (i > 0) {
-        return f(i - 1) + 1;
-    }
+    if (i > 0) { return f(i - 1) + 1; }
     return 0;
 }
