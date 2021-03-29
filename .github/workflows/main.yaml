@@ -14,15 +14,10 @@ env:
 # job control
 
 jobs:
-  checkout:
+  cargo-format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-  cargo-format:
-    runs-on: ubuntu-latest
-    needs: checkout
-    steps:
       - name: Run Cargo Format
         run: cargo fmt -- --check
 
@@ -33,6 +28,7 @@ jobs:
       matrix:
         libc: [wasmception, wasi-sdk]
     steps:
+      - uses: actions/checkout@v2
       - name: Install
         run: |
           sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" bash $LLVM_VERSION
