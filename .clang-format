@@ -1,0 +1,69 @@
+---
+BasedOnStyle: Mozilla
+IndentWidth: 4
+Language: Cpp
+
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+AlignTrailingComments: true
+
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline 
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false 
+AllowShortCaseLabelsOnASingleLine: true
+
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+
+BinPackArguments: true
+BinPackParameters: true
+
+BreakBeforeBraces: Custom
+BraceWrapping: {
+  AfterClass: false,
+  AfterControlStatement: false,
+  AfterEnum: false,
+  AfterFunction: false,
+  AfterNamespace: false,
+  AfterStruct: false,
+  AfterUnion: false,
+  BeforeElse: false,
+  IndentBraces: false,
+  SplitEmptyFunction: false,
+}
+
+BreakBeforeBinaryOperators: NonAssignment
+
+ColumnLimit: 120
+
+Cpp11BracedListStyle: false
+
+IndentCaseLabels: true
+IndentWrappedFunctionNames: false
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+MaxEmptyLinesToKeep: 2
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+SortIncludes: false
+
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+PenaltyBreakAssignment: 100
+PenaltyBreakBeforeFirstCallParameter: 1000
+PenaltyReturnTypeOnItsOwnLine: 0
