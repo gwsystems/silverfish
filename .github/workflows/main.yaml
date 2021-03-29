@@ -18,9 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Clang Format
-        run: find runtime example_code \
-          -type f \
-          -print | grep --exclude-dir -i -E '^*.(c|h|ld|s)$' | xargs clang-format -Werror -n -ferror-limit=0
+        run: find runtime example_code -type f -print | grep --exclude-dir -i -E '^*.(c|h|ld|s)$' | xargs clang-format -Werror -n -ferror-limit=0
 
   test:
     runs-on: ubuntu-latest
