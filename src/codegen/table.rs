@@ -6,8 +6,8 @@ use llvm::Sub;
 
 use crate::wasm::TableInitializer;
 
-use crate::codegen::ModuleCtx;
 use crate::codegen::memory::generate_offset_function;
+use crate::codegen::ModuleCtx;
 
 use crate::codegen::runtime_stubs::*;
 

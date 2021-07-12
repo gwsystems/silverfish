@@ -1,3 +1,5 @@
+use std::cell::Cell;
+
 use llvm::BasicBlock;
 use llvm::Builder;
 use llvm::Compile;
@@ -21,13 +23,19 @@ use crate::codegen::type_conversions::wasm_func_type_to_llvm_type;
 
 use crate::wasm::Instruction;
 
-// TODO: Double check each instruction to make sure it does the right thing in both the safe and unsafe case
+pub struct IfCtx<'a, 'b> {
+    else_block: &'a BasicBlock,
+    else_locals: Vec<&'a Value>,
+    else_built: &'b Cell<bool>
+}
 
-pub fn compile_block<'a, 'b>(
+// TODO: Double check each instruction to make sure it does the right thing in both the safe and unsafe case
+pub fn compile_block<'a, 'b, 'c>(
     m_ctx: &'a ModuleCtx,
     f_ctx: &'a FunctionCtx,
     breakout_stack: &mut Vec<WBreakoutTarget<'a>>,
     termination_target: &WBreakoutTarget<'a>,
+    if_ctx: Option<IfCtx<'a, 'c>>,
     mut locals: Vec<&'a Value>,
     initial_bb: &'a BasicBlock,
     instructions: &'b [Instruction],
@@ -47,6 +55,7 @@ pub fn compile_block<'a, 'b>(
     b.position_at_end(basic_block);
 
     // A block can be terminated, which changes the behavior of the "end" instruction
+    // FIXME: Should we advance to an `end` instruction if we terminate the block??
     let mut block_terminated = false;
 
     let mut remaining_instructions = instructions;
@@ -79,6 +88,7 @@ pub fn compile_block<'a, 'b>(
                     f_ctx,
                     breakout_stack,
                     &inner_termination_target,
+                    None,
                     inner_locals,
                     inner_bb,
                     remaining_instructions,
@@ -133,6 +143,7 @@ pub fn compile_block<'a, 'b>(
                     f_ctx,
                     breakout_stack,
                     &loop_termination_target.clone(),
+                    None,
                     inner_locals,
                     inner_bb,
                     remaining_instructions,
@@ -159,6 +170,94 @@ pub fn compile_block<'a, 'b>(
                 if let Some(result) = result {
                     stack.push(result)
                 }
+            }
+            Instruction::If { produced_type } => {
+                // TODO: Figure out if the `if` block can just inherit its parent's basic block
+
+                // The `if` part gets a block
+                let if_branch_block = f_ctx.generate_block();
+                let if_branch_locals = locals.clone();
+                // So does the else part
+                let else_branch_block = f_ctx.generate_block();
+                let else_branch_locals = locals.clone();
+
+                // The inner jump invalidates our old basic block, so we need a new one
+                let after_bb = f_ctx.generate_block();
+
+                // If the block breaks out, it will come back to our "after" bb, with it's produced type
+                let breakout_target = BreakoutTarget::new_wrapped(after_bb, produced_type);
+                breakout_stack.push(breakout_target.clone());
+
+                // If the block terminates, it comes back to the "after" bb as well
+                let inner_termination_target = breakout_target.clone();
+
+                // Build the conditional jump
+                let i32_v = stack.pop().unwrap();
+                let v = is_non_zero_i32(m_ctx, b, i32_v);
+                b.build_cond_br(v, if_branch_block, Some(else_branch_block));
+
+                // Then compile what's inside the if statement. This will take us through the else to the end statement
+                let else_built = Cell::new(false);
+                remaining_instructions = compile_block(
+                    m_ctx,
+                    f_ctx,
+                    breakout_stack,
+                    &inner_termination_target,
+                    Some(IfCtx {
+                        else_block: else_branch_block,
+                        else_locals: else_branch_locals.clone(),
+                        else_built: &else_built
+                    }),
+                    if_branch_locals,
+                    if_branch_block,
+                    remaining_instructions,
+                );
+
+                // Handle the case where there is no else
+                if !else_built.get() {
+                    let fake_stack = Vec::new(); // Tacitly assumes an if with no else can't produce a value
+                    let mut tt = inner_termination_target.borrow_mut();
+                    tt.add_jump(else_branch_block, &else_branch_locals, &fake_stack);
+                    b.position_at_end(else_branch_block);
+                    b.build_br(tt.bb);
+                }
+
+                // Now we pop off the breakout stack
+                let used_breakout_target = breakout_stack.pop().unwrap();
+
+                // And rewrite our locals for our new bb
+                basic_block = after_bb;
+                b.position_at_end(basic_block);
+
+                locals = used_breakout_target
+                    .borrow()
+                    .build_locals(m_ctx.llvm_ctx, b, &locals);
+
+                // Also, if the block was supposed to yield a value, we collect it and add it onto the stack
+                let result: Option<&Value> = used_breakout_target
+                    .borrow()
+                    .build_result(m_ctx.llvm_ctx, b);
+                if let Some(result) = result {
+                    stack.push(result)
+                }
+            }
+            Instruction::Else => {
+                // First terminate the `if` part of the equation, by adding a jump to the termination point
+                // (which will always be the end of the `if`)
+                let mut tt = termination_target.borrow_mut();
+                tt.add_jump(basic_block, &locals, &stack);
+                b.build_br(tt.bb);
+                // Fetch the ctx
+                let if_ctx_resolved = if_ctx.as_ref().expect("malformed wasm -- else with no if");
+                // Ensure we don't build a duplicate else
+                assert_eq!(if_ctx_resolved.else_built.get(), false);
+                if_ctx_resolved.else_built.set(true);
+                // Reset the stack / locals
+                stack = Vec::new();
+                locals = if_ctx_resolved.else_locals.clone();
+                // Now move us on to the `else` part
+                basic_block = if_ctx_resolved.else_block;
+                b.position_at_end(basic_block);
             }
             Instruction::End => {
                 if !block_terminated {

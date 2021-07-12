@@ -1,0 +1,4 @@
+*.bc
+if_vm
+*.wasm
+*.ll

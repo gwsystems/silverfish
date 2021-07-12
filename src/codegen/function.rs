@@ -254,6 +254,7 @@ pub fn compile_function(ctx: &ModuleCtx, f: &ImplementedFunction) {
         &f_ctx,
         &mut breakout_stack,
         &root_breakout_target.clone(),
+        None,
         locals,
         initial_bb,
         f.code.as_slice(),

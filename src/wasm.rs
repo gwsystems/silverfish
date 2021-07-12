@@ -242,9 +242,12 @@ pub struct TableInitializer {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Instruction {
     BlockStart { produced_type: Option<TypeOrFuncType> },
     LoopStart { produced_type: Option<TypeOrFuncType> },
+    If { produced_type: Option<TypeOrFuncType> },
+    Else,
     End,
 
     Br { depth: u32 },
@@ -454,6 +457,8 @@ pub enum Instruction {
 impl<'a> From<&'a Operator<'a>> for Instruction {
     fn from(o: &Operator<'a>) -> Self {
         match *o {
+            // FIXME: Does this `produced_type` logic even match the spec? Do we need to introspect func types?
+            // (suggested fix -- blacklist func types here)
             Operator::Block { ty } => {
                 let produced_type = if ty == TypeOrFuncType::Type(Type::EmptyBlockType) {
                     None
@@ -470,6 +475,15 @@ impl<'a> From<&'a Operator<'a>> for Instruction {
                 };
                 Instruction::LoopStart { produced_type }
             }
+            Operator::If { ty } => {
+                let produced_type = if ty == TypeOrFuncType::Type(Type::EmptyBlockType) {
+                    None
+                } else {
+                    Some(ty)
+                };
+                Instruction::If { produced_type }
+            }
+            Operator::Else => Instruction::Else,
             Operator::End => Instruction::End,
 
             Operator::Br { relative_depth } => Instruction::Br {
