@@ -34,7 +34,10 @@ impl<'a> BreakoutTarget<'a> {
         }
     }
 
-    pub fn new_wrapped(bb: &'a BasicBlock, result_type: Option<TypeOrFuncType>) -> WBreakoutTarget<'a> {
+    pub fn new_wrapped(
+        bb: &'a BasicBlock,
+        result_type: Option<TypeOrFuncType>,
+    ) -> WBreakoutTarget<'a> {
         let bt = Self::new(bb, result_type);
         Rc::new(RefCell::new(bt))
     }

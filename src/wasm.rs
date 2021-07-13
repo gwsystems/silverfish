@@ -1,6 +1,5 @@
 use std::str;
 
-use wasmparser::{CustomSectionKind, TypeOrFuncType};
 use wasmparser::ExternalKind;
 use wasmparser::FuncType;
 use wasmparser::ImportSectionEntryType;
@@ -12,6 +11,7 @@ use wasmparser::SectionCode;
 use wasmparser::TableType;
 use wasmparser::Type;
 use wasmparser::WasmDecoder;
+use wasmparser::{CustomSectionKind, TypeOrFuncType};
 
 #[derive(Debug)]
 pub struct WasmModule {
@@ -66,14 +66,8 @@ impl Global {
 
     pub fn in_memory_size(&self) -> usize {
         let typ = match self {
-            Global::Imported {
-                content_type,
-                ..
-            } => content_type,
-            Global::InModule {
-                content_type,
-                ..
-            } => content_type
+            Global::Imported { content_type, .. } => content_type,
+            Global::InModule { content_type, .. } => content_type,
         };
 
         match typ {
@@ -243,29 +237,54 @@ pub struct TableInitializer {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Instruction {
-    BlockStart { produced_type: Option<TypeOrFuncType> },
-    LoopStart { produced_type: Option<TypeOrFuncType> },
+    BlockStart {
+        produced_type: Option<TypeOrFuncType>,
+    },
+    LoopStart {
+        produced_type: Option<TypeOrFuncType>,
+    },
     End,
 
-    Br { depth: u32 },
-    BrIf { depth: u32 },
-    BrTable { table: Vec<u32>, default: u32 },
+    Br {
+        depth: u32,
+    },
+    BrIf {
+        depth: u32,
+    },
+    BrTable {
+        table: Vec<u32>,
+        default: u32,
+    },
 
     Return,
     Unreachable,
 
-    Call { index: u32 },
-    CallIndirect { type_index: u32 },
+    Call {
+        index: u32,
+    },
+    CallIndirect {
+        type_index: u32,
+    },
     Drop,
     Nop,
     Select,
 
-    GetLocal { index: u32 },
-    SetLocal { index: u32 },
-    TeeLocal { index: u32 },
+    GetLocal {
+        index: u32,
+    },
+    SetLocal {
+        index: u32,
+    },
+    TeeLocal {
+        index: u32,
+    },
 
-    GetGlobal { index: u32 },
-    SetGlobal { index: u32 },
+    GetGlobal {
+        index: u32,
+    },
+    SetGlobal {
+        index: u32,
+    },
 
     I32Const(i32),
 
@@ -420,32 +439,101 @@ pub enum Instruction {
     F64Ceil,
     F64Nearest,
 
-    I32Load { flags: u32, offset: u32 },
-    I32Store { flags: u32, offset: u32 },
-    I32Load8S { flags: u32, offset: u32 },
-    I32Load8U { flags: u32, offset: u32 },
-    I32Store8 { flags: u32, offset: u32 },
-    I32Load16S { flags: u32, offset: u32 },
-    I32Load16U { flags: u32, offset: u32 },
-    I32Store16 { flags: u32, offset: u32 },
+    I32Load {
+        flags: u32,
+        offset: u32,
+    },
+    I32Store {
+        flags: u32,
+        offset: u32,
+    },
+    I32Load8S {
+        flags: u32,
+        offset: u32,
+    },
+    I32Load8U {
+        flags: u32,
+        offset: u32,
+    },
+    I32Store8 {
+        flags: u32,
+        offset: u32,
+    },
+    I32Load16S {
+        flags: u32,
+        offset: u32,
+    },
+    I32Load16U {
+        flags: u32,
+        offset: u32,
+    },
+    I32Store16 {
+        flags: u32,
+        offset: u32,
+    },
 
-    I64Load { flags: u32, offset: u32 },
-    I64Store { flags: u32, offset: u32 },
-    I64Load8S { flags: u32, offset: u32 },
-    I64Load8U { flags: u32, offset: u32 },
-    I64Store8 { flags: u32, offset: u32 },
-    I64Load16S { flags: u32, offset: u32 },
-    I64Load16U { flags: u32, offset: u32 },
-    I64Store16 { flags: u32, offset: u32 },
-    I64Load32S { flags: u32, offset: u32 },
-    I64Load32U { flags: u32, offset: u32 },
-    I64Store32 { flags: u32, offset: u32 },
+    I64Load {
+        flags: u32,
+        offset: u32,
+    },
+    I64Store {
+        flags: u32,
+        offset: u32,
+    },
+    I64Load8S {
+        flags: u32,
+        offset: u32,
+    },
+    I64Load8U {
+        flags: u32,
+        offset: u32,
+    },
+    I64Store8 {
+        flags: u32,
+        offset: u32,
+    },
+    I64Load16S {
+        flags: u32,
+        offset: u32,
+    },
+    I64Load16U {
+        flags: u32,
+        offset: u32,
+    },
+    I64Store16 {
+        flags: u32,
+        offset: u32,
+    },
+    I64Load32S {
+        flags: u32,
+        offset: u32,
+    },
+    I64Load32U {
+        flags: u32,
+        offset: u32,
+    },
+    I64Store32 {
+        flags: u32,
+        offset: u32,
+    },
 
-    F32Load { flags: u32, offset: u32 },
-    F32Store { flags: u32, offset: u32 },
+    F32Load {
+        flags: u32,
+        offset: u32,
+    },
+    F32Store {
+        flags: u32,
+        offset: u32,
+    },
 
-    F64Load { flags: u32, offset: u32 },
-    F64Store { flags: u32, offset: u32 },
+    F64Load {
+        flags: u32,
+        offset: u32,
+    },
+    F64Store {
+        flags: u32,
+        offset: u32,
+    },
 
     MemorySize,
     MemoryGrow,
@@ -850,7 +938,8 @@ impl WasmModule {
     }
 
     pub fn log_diagnostics(&self) {
-        let global_variable_memory_use: usize = self.globals.iter().map(|g| g.in_memory_size()).sum();
+        let global_variable_memory_use: usize =
+            self.globals.iter().map(|g| g.in_memory_size()).sum();
         info!("Globals taking up {} bytes", global_variable_memory_use);
 
         let mut data_initializer_memory_use = 0;
@@ -859,13 +948,19 @@ impl WasmModule {
                 data_initializer_memory_use += body_bytes.len();
             }
         }
-        info!("Data initializers taking up {} bytes", data_initializer_memory_use);
+        info!(
+            "Data initializers taking up {} bytes",
+            data_initializer_memory_use
+        );
 
         let mut function_table_entries = 0;
         for initializer in &self.table_initializers {
             function_table_entries += initializer.function_indexes.len();
         }
-        info!("Function table entries {} (ignoring fragmentation)", function_table_entries);
+        info!(
+            "Function table entries {} (ignoring fragmentation)",
+            function_table_entries
+        );
     }
 
     fn implement_function(&mut self, mut f: ImplementedFunction) {

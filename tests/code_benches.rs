@@ -31,4 +31,3 @@ fn code_benches_test() -> Result<(), Box<dyn error::Error>> {
     assert!(status.success());
     Ok(())
 }
-
