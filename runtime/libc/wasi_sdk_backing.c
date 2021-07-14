@@ -32,17 +32,12 @@ int main(int argc, char* argv[]) {
     printf("mem use = %d\n", (int) memory_size);
 }
 
-// The symbol the binary gives us to init libc
-extern void wasmf___wasm_call_ctors(void);
-
 // Called before wasmf_main
 void stub_init() {
     switch_out_of_runtime();
-    wasmf___wasm_call_ctors();
+    // wasmf___wasm_call_ctors();
     switch_into_runtime();
 }
-
-
 // WASI API implementations
 
 // some definitions we need
@@ -296,7 +291,7 @@ static i32 wasi_fromerrno(int errno_) {
 }
 
 // file operations
-i32 wasi_unstable_path_open(
+i32 wasi_snapshot_preview1_path_open(
         i32 dirfd,
         u32 lookupflags,
         u32 path_off,
@@ -339,7 +334,48 @@ i32 wasi_unstable_path_open(
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_fd_close(i32 fd) {
+/**
+ * @brief Used by a WASI module to copy the argument buffer into linear memory write an 
+ * indirect to the base offset of the buffer 
+ * 
+ * @param argv_p_offset 
+ * @param argv_buf_offset 
+ * @return i32 
+ */
+i32 wasi_snapshot_preview1_args_get(u32 argv_p_offset, u32 argv_buf_offset){
+    char *argv_buf = get_memory_ptr_for_runtime(argv_buf_offset, runtime_argv_buffer_len);
+    memcpy(argv_buf, runtime_argv_buffer, runtime_argv_buffer_len);
+
+    // Write the vector of argument base offset
+    u32 *argv_p = (u32 *)get_memory_ptr_for_runtime(argv_p_offset, sizeof(u32) * runtime_argc);
+    for (u32 i = 0; i < runtime_argc; i++){
+        *(argv_p++) = argv_buf_offset + runtime_argv_buffer_offsets[i];
+    }
+
+    // TODO: What is the expected return type here
+    return 0;
+}
+
+/**
+ * @brief Used by a WASI module to determine the argument count and size of the requried
+ * argument buffer
+ * 
+ * @param argc linear memory offset where we should write argc
+ * @param args_size linear memory offset where we should write the length of the args buffer
+ * @return i32 
+ */
+i32 wasi_snapshot_preview1_args_sizes_get(i32 argc_offset, i32 args_size_offset){
+    u32 *argc = (u32 *)get_memory_ptr_for_runtime(argc_offset, sizeof(i32));
+    *argc = runtime_argc;
+    
+    u32 *args_size = (u32 *)get_memory_ptr_for_runtime(args_size_offset, sizeof(i32));
+    *args_size = runtime_argv_buffer_len;
+
+    // TODO: What is the expected return type here?
+    return 0;
+}
+
+i32 wasi_snapshot_preview1_fd_close(i32 fd) {
     i32 res = (i32) close(fd);
 
     if (res == -1) {
@@ -348,7 +384,7 @@ i32 wasi_unstable_fd_close(i32 fd) {
     return res;
 }
 
-i32 wasi_unstable_fd_fdstat_get(i32 fd, u32 buf_offset) {
+i32 wasi_snapshot_preview1_fd_fdstat_get(i32 fd, u32 buf_offset) {
     struct wasi_fdstat* fdstat = get_memory_ptr_void(buf_offset, sizeof(struct wasi_fdstat));
 
     struct stat stat;
@@ -382,7 +418,7 @@ i32 wasi_unstable_fd_fdstat_get(i32 fd, u32 buf_offset) {
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_fd_fdstat_set_flags(i32 fd, u32 fdflags) {
+i32 wasi_snapshot_preview1_fd_fdstat_set_flags(i32 fd, u32 fdflags) {
     int flags = (
         ((flags & WASI_FDFLAG_APPEND  ) ? O_APPEND   : 0) |
         ((flags & WASI_FDFLAG_DSYNC   ) ? O_DSYNC    : 0) |
@@ -396,7 +432,7 @@ i32 wasi_unstable_fd_fdstat_set_flags(i32 fd, u32 fdflags) {
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_fd_seek(i32 fd, i64 file_offset, i32 whence, u32 newoffset_off) {
+i32 wasi_snapshot_preview1_fd_seek(i32 fd, i64 file_offset, i32 whence, u32 newoffset_off) {
     off_t res = lseek(fd, (off_t)file_offset, whence);
 
     if (res == -1) {
@@ -407,7 +443,7 @@ i32 wasi_unstable_fd_seek(i32 fd, i64 file_offset, i32 whence, u32 newoffset_off
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_fd_datasync(i32 fd) {
+i32 wasi_snapshot_preview1_fd_datasync(i32 fd) {
     int res = fdatasync(fd);
     if (res == -1) {
         return wasi_fromerrno(errno);
@@ -416,7 +452,7 @@ i32 wasi_unstable_fd_datasync(i32 fd) {
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_fd_read(i32 fd, i32 iov_offset, i32 iovcnt, i32 nread_off) {
+i32 wasi_snapshot_preview1_fd_read(i32 fd, i32 iov_offset, i32 iovcnt, i32 nread_off) {
     i32 sum = 0;
     struct wasi_iovec *iov = get_memory_ptr_void(iov_offset, iovcnt * sizeof(struct wasi_iovec));
 
@@ -434,7 +470,7 @@ i32 wasi_unstable_fd_read(i32 fd, i32 iov_offset, i32 iovcnt, i32 nread_off) {
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_fd_write(i32 fd, i32 iov_offset, i32 iovcnt, i32 nwritten_off) {
+i32 wasi_snapshot_preview1_fd_write(i32 fd, i32 iov_offset, i32 iovcnt, i32 nwritten_off) {
     i32 sum = 0;
     struct wasi_iovec *iov = get_memory_ptr_void(iov_offset, iovcnt * sizeof(struct wasi_iovec));
 
@@ -453,7 +489,7 @@ i32 wasi_unstable_fd_write(i32 fd, i32 iov_offset, i32 iovcnt, i32 nwritten_off)
 }
 
 // other filesystem operations
-i32 wasi_unstable_path_filestat_get(i32 fd, u32 flags, u32 path_off, u32 path_len, u32 buf_off) {
+i32 wasi_snapshot_preview1_path_filestat_get(i32 fd, u32 flags, u32 path_off, u32 path_len, u32 buf_off) {
     // get path/filestat
     char* path = get_memory_string(path_off);
     struct wasi_filestat* filestat = get_memory_ptr_void(buf_off, sizeof(struct wasi_filestat));
@@ -476,7 +512,7 @@ i32 wasi_unstable_path_filestat_get(i32 fd, u32 flags, u32 path_off, u32 path_le
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_path_unlink_file(i32 fd, u32 path_off, u32 path_len) {
+i32 wasi_snapshot_preview1_path_unlink_file(i32 fd, u32 path_off, u32 path_len) {
     // get path
     char* path = get_memory_string(path_off);
 
@@ -488,7 +524,7 @@ i32 wasi_unstable_path_unlink_file(i32 fd, u32 path_off, u32 path_len) {
     return WASI_ESUCCESS;
 }
 
-i32 wasi_unstable_path_create_directory(i32 fd, u32 path_off, u32 path_len) {
+i32 wasi_snapshot_preview1_path_create_directory(i32 fd, u32 path_off, u32 path_len) {
     // get path
     char* path = get_memory_string(path_off);
 
@@ -501,7 +537,7 @@ i32 wasi_unstable_path_create_directory(i32 fd, u32 path_off, u32 path_len) {
 }
 
 // clock operations
-i32 wasi_unstable_clock_time_get(u32 clock_id, u64 precision, u32 time_off) {
+i32 wasi_snapshot_preview1_clock_time_get(u32 clock_id, u64 precision, u32 time_off) {
     struct timespec tp;
     clock_gettime(clock_id, &tp);
     set_i64(time_off, (uint64_t)tp.tv_sec*1000000000ULL + (uint64_t)tp.tv_nsec);
@@ -510,7 +546,38 @@ i32 wasi_unstable_clock_time_get(u32 clock_id, u64 precision, u32 time_off) {
 
 // process operations
 __attribute__((noreturn))
-void wasi_unstable_proc_exit(i32 exitcode) {
+void wasi_snapshot_preview1_proc_exit(i32 exitcode) {
     exit(exitcode);
 }
 
+// Unsupported WASI calls
+// TODO: wasi_snapshot_preview1_environ_get
+// TODO: wasi_snapshot_preview1_environ_sizes_get
+// TODO: wasi_snapshot_preview1_clock_res_get
+// TODO: wasi_snapshot_preview1_fd_advise
+// TODO: wasi_snapshot_preview1_fd_allocate
+// TODO: wasi_snapshot_preview1_fd_fdstat_set_rights
+// TODO: wasi_snapshot_preview1_fd_filestat_get
+// TODO: wasi_snapshot_preview1_fd_filestat_set_size
+// TODO: wasi_snapshot_preview1_fd_filestat_set_times
+// TODO: wasi_snapshot_preview1_fd_pread
+// TODO: wasi_snapshot_preview1_fd_prestat_get
+// TODO: wasi_snapshot_preview1_fd_prestat_dir_name
+// TODO: wasi_snapshot_preview1_fd_pwrite
+// TODO: wasi_snapshot_preview1_fd_readdir
+// TODO: wasi_snapshot_preview1_fd_renumber
+// TODO: wasi_snapshot_preview1_fd_sync
+// TODO: wasi_snapshot_preview1_fd_tell
+// TODO: wasi_snapshot_preview1_path_filestat_set_times
+// TODO: wasi_snapshot_preview1_path_link
+// TODO: wasi_snapshot_preview1_path_readlink
+// TODO: wasi_snapshot_preview1_path_remove_directory
+// TODO: wasi_snapshot_preview1_path_rename
+// TODO: wasi_snapshot_preview1_path_symlink
+// TODO: wasi_snapshot_preview1_poll_oneoff
+// TODO: wasi_snapshot_preview1_proc_raise
+// TODO: wasi_snapshot_preview1_sched_yield
+// TODO: wasi_snapshot_preview1_random_get
+// TODO: wasi_snapshot_preview1_sock_recv
+// TODO: wasi_snapshot_preview1_sock_send
+// TODO: wasi_snapshot_preview1_sock_shutdown

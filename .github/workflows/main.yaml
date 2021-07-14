@@ -6,10 +6,10 @@ env:
   # Rust equivalent of -Werror
   RUSTFLAGS: --deny warnings
   # used during LLVM installation
-  LLVM_VERSION: 9
+  LLVM_VERSION: 12
   # URLs for WebAssembly libcs
   WASMCEPTION_URL: https://github.com/gwsystems/wasmception/releases/download/v0.2.0/wasmception-linux-x86_64-0.2.0.tar.gz
-  WASI_SDK_URL: https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-8/wasi-sdk-8.0-linux.tar.gz
+  WASI_SDK_URL: https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz
 
 # job control
 jobs:
@@ -18,7 +18,8 @@ jobs:
 
     strategy:
       matrix:
-        libc: [wasmception, wasi-sdk]
+        # libc: [wasmception, wasi-sdk]
+        libc: [wasi-sdk]
 
     steps:
       - uses: actions/checkout@v2
@@ -33,12 +34,12 @@ jobs:
           PATH=/usr/bin:$PATH
           llvm-config --version
 
-      - name: Get wasmception
-        if: matrix.libc == 'wasmception'
-        run: |
-          wget $WASMCEPTION_URL -O wasmception.tar.gz
-          mkdir -p wasmception
-          tar xvfz wasmception.tar.gz -C wasmception
+      # - name: Get wasmception
+      #   if: matrix.libc == 'wasmception'
+      #   run: |
+      #     wget $WASMCEPTION_URL -O wasmception.tar.gz
+      #     mkdir -p wasmception
+      #     tar xvfz wasmception.tar.gz -C wasmception
 
       - name: Get wasi-sdk
         if: matrix.libc == 'wasi-sdk'

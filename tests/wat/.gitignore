@@ -2,3 +2,4 @@
 if_vm
 *.wasm
 *.ll
+args_vm

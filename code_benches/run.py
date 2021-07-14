@@ -90,14 +90,14 @@ WASMCEPTION_BACKING = "wasmception_backing.c"
 WASI_SDK_PATH = ROOT_PATH + "/wasi-sdk"
 WASI_SDK_CLANG = WASI_SDK_PATH + "/bin/clang"
 WASI_SDK_SYSROOT = WASI_SDK_PATH + "/share/wasi-sysroot"
-WASI_SDK_FLAGS = "--target=wasm32-wasi -mcpu=mvp -nostartfiles -O3 -flto"
+WASI_SDK_FLAGS = "--target=wasm32-wasi -mcpu=mvp -O3 -flto"
 WASI_SDK_BACKING = "wasi_sdk_backing.c"
 
 # download WASI-SDK if it is not in the expected path
 if sys.platform == "linux" or sys.platform == "linux2":
-    WASI_SDK_URL = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-8/wasi-sdk-8.0-linux.tar.gz"
+    WASI_SDK_URL = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz"
 elif sys.platform == "darwin":
-    WASI_SDK_URL = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-8/wasi-sdk-8.0-macos.tar.gz"
+    WASI_SDK_URL = "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-macos.tar.gz"
 else:
     print("awsm supports Linux and Mac OS, saw {}".format(sys.platform))
     exit(1)
@@ -117,7 +117,7 @@ WASM_CLANG, WASM_SYSROOT, WASM_FLAGS, WASM_BACKING = bestpath([
 ])
 
 # These flags are all somewhat important -- see @Others for more information
-WASM_LINKER_FLAGS = "-Wl,--allow-undefined,-z,stack-size={stack_size},--no-threads,--stack-first,--no-entry,--export-all,--export=main,--export=dummy"
+WASM_LINKER_FLAGS = "-Wl,--allow-undefined,-z,stack-size={stack_size},--threads=1"
 
 WASM_FLAGS = ' '.join([
     WASM_LINKER_FLAGS,

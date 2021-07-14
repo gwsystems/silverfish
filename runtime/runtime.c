@@ -253,9 +253,41 @@ void* allocate_n_bytes_ptr(u32 n) {
 WEAK void populate_globals() {}
 
 // Code that actually runs the wasm code
-IMPORT i32 wasmf_main(i32 a, i32 b);
+IMPORT void wasmf__start(void);
+
+u32 runtime_argc = 0;
+
+char *runtime_argv_buffer = NULL;
+u32 runtime_argv_buffer_len = 0;
+
+u32 *runtime_argv_buffer_offsets = NULL;
+
+void runtime_cleanup() {
+    // Cancel any pending timeout
+    //    if (wasm_execution_timeout_ms) {
+    //        cancel_timeout();
+    //    }
+
+    free(runtime_argv_buffer);
+    runtime_argv_buffer_len = 0;
+    free(runtime_argv_buffer_offsets);
+}
 
 int runtime_main(int argc, char** argv) {
+    // Set argc and argv to globals, these are later used by the WASI syscalls 
+    runtime_argc = argc;
+
+    runtime_argv_buffer_offsets = calloc(argc, sizeof(u32));
+
+    // Copy the null terminated args one after the other into a global with the format WASI calls expect
+    for (int i = 0; i < argc; i++) {
+        runtime_argv_buffer_offsets[i] = runtime_argv_buffer_len;
+        size_t arg_len = strlen(argv[i]) + 1;
+        runtime_argv_buffer = realloc(runtime_argv_buffer, runtime_argv_buffer_len + arg_len);
+        strcpy(&runtime_argv_buffer[runtime_argv_buffer_len], argv[i]);
+        runtime_argv_buffer_len += (int)arg_len;
+    }
+
     // Setup the linear memory and function table
     alloc_linear_memory();
     populate_table();
@@ -285,25 +317,14 @@ int runtime_main(int argc, char** argv) {
 //        schedule_timeout();
 //    }
 
-    u32 array_offset = allocate_n_bytes(argc * sizeof(i32));
-    u32* array_ptr = get_memory_ptr_void(array_offset, argc * sizeof(i32));
-    for (int i = 0; i < argc; i++) {
-        size_t str_size = strlen(argv[i]) + 1;
-        u32 str_offset = allocate_n_bytes(str_size);
-        char* str_ptr = get_memory_ptr_for_runtime(str_offset, str_size);
-        strcpy(str_ptr, argv[i]);
-        array_ptr[i] = str_offset;
-    }
-
     stub_init();
+    atexit(runtime_cleanup);
 
     switch_out_of_runtime();
-    int ret = wasmf_main(argc, array_offset);
+    wasmf__start();
     switch_into_runtime();
 
-    // Cancel any pending timeout
-//    if (wasm_execution_timeout_ms) {
-//        cancel_timeout();
-//    }
-    return ret;
+    // TODO: Improve "implicit exit" path
+    // My understanding is that _start can optionally return. How can we get this?
+    return 0;
 }
